@@ -8,18 +8,18 @@
 (defun-exported extract-tokens (str test &optional (start 0))
   "Returns a list of the subsequences satisfying test, characters
    failing the test are treated as whitespace."
-  (declare (optimize (speed 3) (safety 0) (debug 0))
+  (declare (optimize (speed 3) (safety 0) (debug 1))
 	   (type string str)
 	   (type fixnum start))
   (let ((p1 (position-if test str :start start)))
-    (declare (type fixnum p1))
-    (if p1
-	(let ((p2 (position-if-not test str :start p1)))
-	  (declare (type fixnum p2))
-	  (cons (subseq str p1 p2)
-		(if p2
-		    (extract-tokens str test p2)
-		  nil))))))
+    (declare (type (or null fixnum) p1))
+    (when p1
+      (let ((p2 (position-if-not test str :start p1)))
+	(declare (type (or null fixnum) p2))
+	(if p2
+	    (cons (subseq str p1 p2)
+		  (extract-tokens str test p2))
+	    (cons (subseq str p1) nil))))))
 
 (defun-exported constituent (c)
   (and (graphic-char-p c)

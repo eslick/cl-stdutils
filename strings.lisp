@@ -51,8 +51,8 @@
 
 (defun-exported strncmp ( string1 string2 count start )
   (declare #-mcl (type fixnum count start)
-	   #-mcl (type simple-string string1 string2)
-	   (optimize speed (safety 0)))
+	   #-mcl (type string string1 string2)
+	   (optimize (speed 3) (safety 1) (debug 1)))
   (ignore-errors 
     (loop for i fixnum from start to (+ start count -1)
           finally (return t) do
@@ -62,15 +62,15 @@
 
 (defun-exported strncmp-end2 ( string1 string2 count start )
   (declare #-mcl (type fixnum count start)
-	   #-mcl (type simple-string string1 string2)
-	   (inline schar)
-	   (optimize speed (safety 0)))
-;;  (ignore-errors 
+	   #-mcl (type string string1 string2)
+	   (inline char)
+	   (optimize (speed 3) (safety 1) (debug 1)))
+  (ignore-errors 
     (loop for i fixnum from 0 to (1- count) 
           finally (return t) do
 ;;      (format t "~A ~A" (char string1 i) (char string2 i))
-      (when (neq (schar string1 i) (schar string2 (+ i start)))
-	(return nil))))
+      (when (neq (char string1 i) (char string2 (+ i start)))
+	(return nil)))))
 
 ;;
 ;; Misc odd functions
@@ -111,14 +111,14 @@
 
 ;;; Strings
 
-(defmacro string-append (outputstr &rest args)
+(defmacro-exported string-append (outputstr &rest args)
   `(setq ,outputstr (concatenate 'string ,outputstr ,@args)))
 
-(defun list-to-string (lst)
+(defun-exported list-to-string (lst)
   "Converts a list to a string, doesn't include any delimiters between elements"
   (format nil "~{~A~}" lst))
 
-(defun count-string-words (str)
+(defun-exported count-string-words (str)
   (declare (simple-string str)
 	   (optimize (speed 3) (safety 0) (space 0)))
   (let ((n-words 0)
@@ -135,7 +135,7 @@
 	(setq in-word nil)))))
 
 ;; From Larry Hunter with modifications
-(defun position-char (char string start max)
+(defun-exported position-char (char string start max)
   (declare (optimize (speed 3) (safety 0) (space 0))
 	   (fixnum start max) (simple-string string))
   (do* ((i start (1+ i)))
@@ -143,7 +143,7 @@
     (declare (fixnum i))
     (when (char= char (schar string i)) (return i))))
 
-(defun position-not-char (char string start max)
+(defun-exported position-not-char (char string start max)
   (declare (optimize (speed 3) (safety 0) (space 0))
 	   (fixnum start max) (simple-string string))
   (do* ((i start (1+ i)))
@@ -151,7 +151,7 @@
     (declare (fixnum i))
     (when (char/= char (schar string i)) (return i))))
 
-(defun delimited-string-to-list (string &optional (separator #\space) 
+(defun-exported delimited-string-to-list (string &optional (separator #\space) 
 						  skip-terminal)
   "split a string with delimiter"
   (declare (optimize (speed 3) (safety 0) (space 0) (compilation-speed 0))
@@ -174,10 +174,10 @@
     (setq pos (1+ end))))
 
 
-(defun list-to-delimited-string (list &optional (separator " "))
+(defun-exported list-to-delimited-string (list &optional (separator " "))
   (format nil (concatenate 'string "~{~A~^" (string separator) "~}") list))
 
-(defun string-invert (str)
+(defun-exported string-invert (str)
   "Invert case of a string"
   (declare (optimize (speed 3) (compilation-speed 0) (debug 0) (safety 0))
            (simple-string str))
@@ -190,17 +190,17 @@
 		   (if up   (return-from skip str) (setf down t)))))
       (if up (string-downcase str) (string-upcase str)))))
 
-(defun add-sql-quotes (s)
+(defun-exported add-sql-quotes (s)
   (substitute-string-for-char s #\' "''"))
 
-(defun escape-backslashes (s)
+(defun-exported escape-backslashes (s)
   (substitute-string-for-char s #\\ "\\\\"))
 
-(defun substitute-string-for-char (procstr match-char subst-str) 
+(defun-exported substitute-string-for-char (procstr match-char subst-str) 
   "Substitutes a string for a single matching character of a string"
   (substitute-chars-strings procstr (list (cons match-char subst-str))))
 
-(defun string-substitute (string substring replacement-string)
+(defun-exported string-substitute (string substring replacement-string)
   "String substitute by Larry Hunter. Obtained from Google"
   (let ((substring-length (length substring))
 	(last-end 0)
@@ -217,21 +217,22 @@
 	  replacement-string))
       (setq last-end (+ next-start substring-length)))))
 
-(defun string-trim-last-character (s)
+(defun-exported string-trim-last-character (s)
   "Return the string less the last character"
   (let ((len (length s)))
     (if (plusp len)
 	(subseq s 0 (1- len))
 	s)))
 
-(defun nstring-trim-last-character (s)
+;; NOTE: Fix this to nsubseq
+(defun-exported nstring-trim-last-character (s)
   "Return the string less the last character"
   (let ((len (length s)))
     (if (plusp len)
-	(nsubseq s 0 (1- len))
+	(subseq s 0 (1- len))
 	s)))
 
-(defun string-hash (str &optional (bitmask 65535))
+(defun-exported string-hash (str &optional (bitmask 65535))
   (let ((hash 0))
     (declare (fixnum hash)
 	     (simple-string str))
@@ -240,34 +241,34 @@
       (setq hash (+ hash (char-code (char str i)))))
     (logand hash bitmask)))
 
-(defun is-string-empty (str)
+(defun-exported is-string-empty (str)
   (zerop (length str)))
 
 (defvar *whitespace-chars* '(#\space #\tab #\return #\linefeed
 			     #+allegro #\%space
 			     #+lispworks #\No-Break-Space))
 
-(defun is-char-whitespace (c) 
+(defun-exported is-char-whitespace (c) 
   (declare (character c) (optimize (speed 3) (safety 0)))
   (or (char= c #\Space) (char= c #\Tab) (char= c #\Return)
       (char= c #\Linefeed)
       #+allegro (char= c #\%space)
       #+lispworks (char= c #\No-Break-Space)))
 
-(defun is-string-whitespace (str)
+(defun-exported is-string-whitespace (str)
   "Return t if string is all whitespace"
   (every #'is-char-whitespace str))
 
-(defun string-right-trim-whitespace (str)
+(defun-exported string-right-trim-whitespace (str)
   (string-right-trim *whitespace-chars* str))
 
-(defun string-left-trim-whitespace (str)
+(defun-exported string-left-trim-whitespace (str)
   (string-left-trim *whitespace-chars* str))
 
-(defun string-trim-whitespace (str)
+(defun-exported string-trim-whitespace (str)
   (string-trim *whitespace-chars* str))
 
-(defun replaced-string-length (str repl-alist)
+(defun-exported replaced-string-length (str repl-alist)
   (declare (simple-string str)
 	   (optimize (speed 3) (safety 0) (space 0)))
     (do* ((i 0 (1+ i))
@@ -282,7 +283,7 @@
 	  (incf new-len (1- (length
 			     (the simple-string (cdr match)))))))))
 
-(defun substitute-chars-strings (str repl-alist)
+(defun-exported substitute-chars-strings (str repl-alist)
   "Replace all instances of a chars with a string. repl-alist is an assoc
 list of characters and replacement strings."
   (declare (simple-string str)
@@ -310,14 +311,14 @@ list of characters and replacement strings."
 	  (setf (char new-string dpos) c)
 	  (incf dpos))))))
 
-(defun escape-xml-string (string)
+(defun-exported escape-xml-string (string)
   "Escape invalid XML characters"
   (substitute-chars-strings string '((#\& . "&amp;") (#\< . "&lt;"))))
 
-(defun make-usb8-array (len)
+(defun-exported make-usb8-array (len)
   (make-array len :element-type '(unsigned-byte 8)))
 
-(defun usb8-array-to-string (vec)
+(defun-exported usb8-array-to-string (vec)
   (declare (type (simple-array (unsigned-byte 8) (*)) vec))
   (let* ((len (length vec))
 	 (str (make-string len)))
@@ -329,7 +330,7 @@ list of characters and replacement strings."
       (declare (fixnum i))
       (setf (schar str i) (code-char (aref vec i))))))
 
-(defun string-to-usb8-array (str)
+(defun-exported string-to-usb8-array (str)
   (declare (simple-string str))
   (let* ((len (length str))
 	 (vec (make-usb8-array len)))
@@ -341,14 +342,14 @@ list of characters and replacement strings."
       (declare (fixnum i))
       (setf (aref vec i) (char-code (schar str i))))))
 
-(defun concat-separated-strings (separator &rest lists)
+(defun-exported concat-separated-strings (separator &rest lists)
   (format nil (concatenate 'string "~{~A~^" (string separator) "~}")
 	  (append-sublists lists)))
 
-(defun only-null-list-elements-p (lst)
+(defun-exported only-null-list-elements-p (lst)
   (or (null lst) (every #'null lst)))
 
-(defun print-separated-strings (strm separator &rest lists)
+(defun-exported print-separated-strings (strm separator &rest lists)
   (declare (optimize (speed 3) (safety 0) (space 0) (debug 0)
 		     (compilation-speed 0)))
   (do* ((rest-lists lists (cdr rest-lists))
@@ -364,7 +365,7 @@ list of characters and replacement strings."
       (unless (and last-elem last-list)
 	(write-string separator strm)))))
 
-(defun prefixed-fixnum-string (num pchar len)
+(defun-exported prefixed-fixnum-string (num pchar len)
   "Outputs a string of LEN digit with an optional initial character PCHAR.
 Leading zeros are present."
   (declare (optimize (speed 3) (safety 0) (space 0))
@@ -386,7 +387,7 @@ Leading zeros are present."
     (declare (fixnum val mod zero-code pos) (simple-string result))
     (setf (schar result pos) (code-char (+ zero-code mod)))))
 
-(defun integer-string (num len)
+(defun-exported integer-string (num len)
   "Outputs a string of LEN digit with an optional initial character PCHAR.
 Leading zeros are present."
   (declare (optimize (speed 3) (safety 0) (space 0))
@@ -405,7 +406,7 @@ Leading zeros are present."
     (declare (fixnum mod zero-code pos) (simple-string result) (integer val))
     (setf (schar result pos) (code-char (+ zero-code mod)))))
 
-(defun fast-string-search (substr str substr-length startpos endpos)
+(defun-exported fast-string-search (substr str substr-length startpos endpos)
   "Optimized search for a substring in a simple-string"
   (declare (simple-string substr str)
 	   (fixnum substr-length startpos endpos)
@@ -421,7 +422,7 @@ Leading zeros are present."
       (unless (char= (schar str (+ i pos)) (schar substr i))
 	(return nil)))))
 
-(defun string-delimited-string-to-list (str substr)
+(defun-exported string-delimited-string-to-list (str substr)
   "splits a string delimited by substr into a list of strings"
   (declare (simple-string str substr)
 	   (optimize (speed 3) (safety 0) (space 0) (compilation-speed 0)
@@ -441,7 +442,7 @@ Leading zeros are present."
     (push (subseq str pos end) output)
     (setq pos (+ end substr-len))))
   
-(defun string-to-list-skip-delimiter (str &optional (delim #\space))
+(defun-exported string-to-list-skip-delimiter (str &optional (delim #\space))
   "Return a list of strings, delimited by spaces, skipping spaces."
   (declare (simple-string str)
 	   (optimize (speed 0) (space 0) (safety 0)))
@@ -459,11 +460,11 @@ Leading zeros are present."
 	     (type (or fixnum null) i j))
     (push (subseq str i j) results)))
 
-(defun string-starts-with (start str)
+(defun-exported string-starts-with (start str)
   (and (>= (length str) (length start))
        (string-equal start str :end2 (length start))))
 
-(defun count-string-char (s c)
+(defun-exported count-string-char (s c)
   "Return a count of the number of times a character appears in a string"
   (declare (simple-string s)
 	   (character c)
@@ -476,7 +477,7 @@ Leading zeros are present."
     (when (char= (schar s i) c)
       (incf count))))
 
-(defun count-string-char-if (pred s)
+(defun-exported count-string-char-if (pred s)
   "Return a count of the number of times a predicate is true
 for characters in a string"
   (declare (simple-string s)
@@ -493,13 +494,13 @@ for characters in a string"
 
 ;;; URL Encoding
 
-(defun non-alphanumericp (ch)
+(defun-exported non-alphanumericp (ch)
   (not (alphanumericp ch)))
 
 (defvar +hex-chars+ "0123456789ABCDEF")
 (declaim (type simple-string +hex-chars+))
 
-(defun hexchar (n)
+(defun-exported hexchar (n)
   (declare (type (integer 0 15) n))
   (schar +hex-chars+ n))
 
@@ -509,7 +510,7 @@ for characters in a string"
 (declaim (type fixnum +char-code-0+ +char-code-upper-a+
 	       +char-code-0))
 
-(defun charhex (ch)
+(defun-exported charhex (ch)
   "convert hex character to decimal"
   (let ((code (char-code (char-upcase ch))))
     (declare (fixnum ch)) 
@@ -517,7 +518,7 @@ for characters in a string"
 	(+ 10 (- code +char-code-upper-a+))
 	(- code +char-code-0+))))
 
-(defun encode-uri-string (query)
+(defun-exported encode-uri-string (query)
   "Escape non-alphanumeric characters for URI fields"
   (declare (simple-string query)
 	   (optimize (speed 3) (safety 0) (space 0)))
@@ -540,7 +541,7 @@ for characters in a string"
 	    (setf (schar str dpos) (hexchar (logand c 15))))
 	(setf (schar str dpos) ch)))))
 
-(defun decode-uri-string (query)
+(defun-exported decode-uri-string (query)
   "Unescape non-alphanumeric characters for URI fields"
   (declare (simple-string query)
 	   (optimize (speed 3) (safety 0) (space 0)))
@@ -570,7 +571,7 @@ for characters in a string"
     "abcdefghjkmnpqrstuvwxyz123456789ABCDEFGHJKLMNPQSRTUVWXYZ")
   (defconstant +unambiguous-length+ (length +unambiguous-charset+)))
 
-(defun random-char (&optional (set :lower-alpha))
+(defun-exported random-char (&optional (set :lower-alpha))
   (ecase set
     (:lower-alpha
      (code-char (+ +char-code-lower-a+ (random 26))))
@@ -590,7 +591,7 @@ for characters in a string"
 	 (code-char (+ +char-code-lower-a+ n)))))))
      
 
-(defun random-string (&key (length 10) (set :lower-alpha))
+(defun-exported random-string (&key (length 10) (set :lower-alpha))
   "Returns a random lower-case string."
   (declare (optimize (speed 3)))
   (let ((s (make-string length)))
@@ -599,26 +600,26 @@ for characters in a string"
       (setf (schar s i) (random-char set)))))
 
 
-(defun first-char (s)
+(defun-exported first-char (s)
   (declare (simple-string s))
   (when (and (stringp s) (plusp (length s)))
     (schar s 0)))
 
-(defun last-char (s)
+(defun-exported last-char (s)
   (declare (simple-string s))
   (when (stringp s)
     (let ((len (length s)))
       (when (plusp len))
       (schar s (1- len)))))
 
-(defun ensure-string (v)
+(defun-exported ensure-string (v)
   (typecase v
     (string v)
     (character (string v))
     (symbol (symbol-name v))
     (otherwise (write-to-string v))))
 
-(defun string-right-trim-one-char (char str)
+(defun-exported string-right-trim-one-char (char str)
   (declare (simple-string str))
   (let* ((len (length str))
 	 (last (1- len)))
@@ -628,7 +629,7 @@ for characters in a string"
       str)))
 
 
-(defun string-strip-ending (str endings)
+(defun-exported string-strip-ending (str endings)
   (if (stringp endings)
       (setq endings (list endings)))
   (let ((len (length str)))
@@ -641,10 +642,10 @@ for characters in a string"
 	  (subseq str 0 (- len (length ending))))))))
        
 
-(defun string-maybe-shorten (str maxlen)
+(defun-exported string-maybe-shorten (str maxlen)
   (string-elide str maxlen :end))
 
-(defun string-elide (str maxlen position)
+(defun-exported string-elide (str maxlen position)
   (declare (fixnum maxlen))
   (let ((len (length str)))
     (declare (fixnum len))
@@ -661,7 +662,7 @@ for characters in a string"
      ((or (eq position :end) t)
       (concatenate 'string (subseq str 0 (- maxlen 3)) "...")))))
 
-(defun shrink-vector (str size)
+(defun-exported shrink-vector (str size)
   #+allegro
   (excl::.primcall 'sys::shrink-svector str size)
   #+cmu
@@ -676,7 +677,7 @@ for characters in a string"
   (setq str (subseq str 0 size))
   str)
 
-(defun lex-string (string &key (whitespace '(#\space #\newline)))
+(defun-exported lex-string (string &key (whitespace '(#\space #\newline)))
   "Separates a string at whitespace and returns a list of strings"
   (flet ((is-sep (char) (member char whitespace :test #'char=)))
     (let ((tokens nil))
@@ -692,7 +693,7 @@ for characters in a string"
            ((null token-start) (nreverse tokens))
         (push (subseq string token-start token-end) tokens)))))
 
-(defun split-alphanumeric-string (string)
+(defun-exported split-alphanumeric-string (string)
   "Separates a string at any non-alphanumeric chararacter"
   (declare (simple-string string)
 	   (optimize (speed 3) (safety 0)))
@@ -714,7 +715,7 @@ for characters in a string"
         (push (subseq string token-start token-end) tokens)))))
 
 
-(defun trim-non-alphanumeric (word)
+(defun-exported trim-non-alphanumeric (word)
   "Strip non-alphanumeric characters from beginning and end of a word."
   (declare (simple-string word)
 	   (optimize (speed 3) (safety 0) (space 0)))
@@ -739,7 +740,7 @@ for characters in a string"
 
 	  
 
-(defun collapse-whitespace (s)
+(defun-exported collapse-whitespace (s)
   "Convert multiple whitespace characters to a single space character."
   (declare (simple-string s)
 	   (optimize (speed 3) (safety 0)))
@@ -760,7 +761,7 @@ for characters in a string"
 	  (setq in-white nil)
 	  (write-char c stream)))))))
 
-(defun string->list (string)
+(defun-exported string->list (string)
   (let ((eof (list nil)))
     (with-input-from-string (stream string)
       (do ((x (read stream nil eof) (read stream nil eof))

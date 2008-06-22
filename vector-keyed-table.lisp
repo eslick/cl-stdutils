@@ -25,6 +25,8 @@
 (defparameter *vector-keyed-threshold* 5
   "When to switch internally from assoc list to hash table")
 
+(defvar *vechash-threshold* 10)
+
 (defclass-exported vector-keyed-table (table)
   ((root :accessor table-root 
 	 :initarg :root)
@@ -34,7 +36,8 @@
    (count :accessor table-count
 	  :initform 0)))
 
-(defmethod-exported initialize-instance :after ((table vector-keyed-table) &rest initargs &key &allow-other-keys)
+(defmethod initialize-instance :after ((table vector-keyed-table) &rest initargs)
+  (declare (ignore initargs))
   (clear table))
 
 ;;
@@ -164,44 +167,45 @@
 ;; ----------------------
 ;;
 	   
-(defmethod-exported get-value ((table vector-keyed-table) key)
+(defmethod get-value ((table vector-keyed-table) key)
   (assert (subtypep (type-of key) 'array))
   (vector-keyed-get table key))
 
-(defmethod-exported (setf get-value) (value (table vector-keyed-table) key)
+(defmethod (setf get-value) (value (table vector-keyed-table) key)
   (assert (subtypep (type-of key) 'array))
   (vector-keyed-put table key value))
 
-(defmethod-exported drop ((table vector-keyed-table) key)
+(defmethod drop ((table vector-keyed-table) key)
   (assert (subtypep (type-of key) 'array))
   (vector-keyed-rem table key))
 
-(defmethod-exported clear ((table vector-keyed-table))
+(defmethod clear ((table vector-keyed-table))
   (setf (table-root table) 
 	(make-instance 'hashed-table
 		       :hash (make-hash-table :test #'eq :size 1000 :rehash-size 1.5 :rehash-threshold 0.7)))
   (setf (table-count table) 0)
   t)
 
-(defmethod-exported size-of ((table vector-keyed-table))
+(defmethod size-of ((table vector-keyed-table))
   (table-count table))
 
-(defmethod-exported storage-allocated ((table vector-keyed-table))
+(defmethod storage-allocated ((table vector-keyed-table))
   ;; NOTE: TODO
   )
 
-(defclass-exported vector-keyed-table-iterator (iterator)
+(defclass vector-keyed-table-iterator (iterator)
   ((reference :accessor reference :initarg :reference)
    (type :accessor iter-type :initarg :type)
    (last :accessor last-key :initform nil)
    (stack :accessor vkti-stack :initform nil)))
 
-(defmethod-exported get-iterator ((vktable vector-keyed-table) &key (type :pair))
+(defmethod get-iterator ((vktable vector-keyed-table) &key (type :pair))
   (make-instance 'vector-keyed-table-iterator
 		 :reference vktable
 		 :type type))
 
-(defmethod-exported initialize-instance :after ((iter vector-keyed-table-iterator) &rest initargs &key &allow-other-keys)
+(defmethod initialize-instance :after ((iter vector-keyed-table-iterator) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
   (reset iter))
 
 (defmacro mvpass2 (form)
