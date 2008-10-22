@@ -450,14 +450,14 @@
 
 ;; alist operators: Avoid evil car/cdrs after assoc
 
-(defun-exported assoc-get (key list)
-  (let ((it (assoc key list)))
+(defun-exported assoc-get (key list &optional (test #'eq))
+  (let ((it (assoc key list :test test)))
     (if it 
 	(values (cdr it) t)
       (values nil nil))))
 
-(defun-exported assoc-put (key value list)
-  (let ((it (assoc key list)))
+(defun-exported assoc-put (key value list &optional (test #'eq))
+  (let ((it (assoc key list :test test)))
     (if it 
 	(setf (cdr it) value)
       nil)))
