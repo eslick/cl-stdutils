@@ -20,7 +20,7 @@
   `(defmacro ,short (&rest args)
      `(,',long ,@args)))
 
-(defmacro-exported abbrevs (&rest names)
+(defmacro-exported abbrevs (&body names)
   "Map abbrev over a list of name pairs: (ab nam ab nam ...)"
   `(progn
      ,@(mapcar #'(lambda (pair)

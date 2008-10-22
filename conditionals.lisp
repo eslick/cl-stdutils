@@ -43,7 +43,7 @@
   `(let ((it ,test-form))
      (if it ,then-form ,else-form)))
 
-(defmacro-exported aif-ret (test-form &rest else-form)
+(defmacro-exported aif-ret (test-form &body else-form)
   `(let ((it ,test-form))
      (if it it (progn ,@else-form))))
 
@@ -61,6 +61,9 @@
   (let ((win (gensym)))
     `(multiple-value-bind (it ,win) ,test-form
        (if ,win it (progn ,@else-form)))))
+
+(defmacro-exported ifret (test-form &rest else-form)
+  `(aif-ret ,test-form ,@else-form))
 
 (defmacro-exported awhen (test-form &body body) 
   `(aif ,test-form

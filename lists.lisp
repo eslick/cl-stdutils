@@ -719,13 +719,19 @@ Keylist accepts :key, :test, and :test-not"
 ;; Funky sorting
 ;; -------------------------------
 
-(defun-exported sort-b-according-to-a (alist blist predicate)
+(defun-exported sort-b-according-to-a (alist blist predicate &optional (key #'first))
   "Sorts blist according to the reordering of alist and returns
    the newly ordered blist.  Non-destructive to alist and blist"
   (second
    (apply #'gather 
 	  (sort (distribute (list alist blist))
-		predicate :key #'first))))
+		predicate :key key))))
+
+(defun-exported sort-ordering-by (order elements key)
+  "Simple n squared order b according to a"
+  (loop for val in order
+     for elt = (find val elements :key key)
+     collect elt))
 
 ;; ---------------
 ;; Mapping

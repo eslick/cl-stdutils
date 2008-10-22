@@ -129,9 +129,9 @@
    structure using key"
   (funcall test (symbol-name src) (symbol-name (if key (funcall key target) target))))
 
-(defun-exported localize-symbol (sym &key (package *package*) exceptions (ignore-keywords t))
+(defun-exported localize-symbol (sym &key (package *package*) exceptions)
   (if (and (symbolp sym) 
-	   (if ignore-keywords (not (keywordp sym)) t)
+	   (not (keywordp sym))
 	   (not (eq (symbol-package sym) package))
 	   (not (find (symbol-package sym) exceptions)))
       (intern (symbol-name sym) package)
