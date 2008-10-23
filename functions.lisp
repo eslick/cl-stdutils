@@ -139,7 +139,10 @@
       `#'(lambda (&rest args)
 	   (assert (>= (length args) ,diff))
 	   (funcall ,fn ,@(compute-args))))))
-		 
+
+(defun-exported curry2 (fn arg)
+  #'(lambda (arg1 &rest args)
+      (apply fn arg1 arg args)))
 
 ;; --------------------------------
 ;; Cheap memoization
