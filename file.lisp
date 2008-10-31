@@ -94,49 +94,56 @@
   ;; From: Bill Schelter <wfs@fireant.ma.utexas.edu>
   ;; Date: Wed, 5 May 1999 11:51:19 -0500
   ;; fold the name.type into directory
-  (let* ((path (pathname filename))
-         (name (un-unspecific (pathname-name path)))
-         (type (un-unspecific (pathname-type path)))
-         (new-dir
-          (cond ((and name type) (list (concatenate 'string name "." type)))
-                (name (list name))
-                (type (list type))
-                (t nil))))
-    (when new-dir
-      (setq path (make-pathname
-                  :directory (append (un-unspecific (pathname-directory path))
-                                     new-dir)
-                  :name nil :type nil :version nil :defaults path)))
-    #+allegro (excl::probe-directory path)
-    #+clisp (values
-             (ignore-errors
-               (#+lisp=cl ext:probe-directory #-lisp=cl lisp:probe-directory
-                          path)))
-    #+cmu (eq :directory (unix:unix-file-kind (namestring path)))
-    #+lispworks (lw:file-directory-p path)
-    #+sbcl (eq :directory (sb-unix:unix-file-kind (namestring path)))
-    #-(or allegro clisp cmu lispworks sbcl)
-    (probe-file path)))
+  (flet ((un-unspecific (value)
+           (if (eq value :unspecific) nil value)))
+    (let* ((path (pathname filename))
+	   (name (un-unspecific (pathname-name path)))
+	   (type (un-unspecific (pathname-type path)))
+	   (new-dir
+	    (cond ((and name type) (list (concatenate 'string name "." type)))
+		  (name (list name))
+		  (type (list type))
+		  (t nil))))
+      (when new-dir
+	(setq path (make-pathname
+		    :directory (append (un-unspecific (pathname-directory path))
+				       new-dir)
+		    :name nil :type nil :version nil :defaults path)))
+      #+allegro (excl::probe-directory path)
+      #+clisp (values
+	       (ignore-errors
+		 (#+lisp=cl ext:probe-directory #-lisp=cl lisp:probe-directory
+			    path)))
+      #+cmu (eq :directory (unix:unix-file-kind (namestring path)))
+      #+lispworks (lw:file-directory-p path)
+      #+sbcl (eq :directory (sb-unix:unix-file-kind (namestring path)))
+      #-(or allegro clisp cmu lispworks sbcl)
+      (probe-file path))))
 
-(defun-exported walk-directories (rootdir &key filef dirf hidden (on-entry t) (ignore-dotfiles t)
+(defun-exported walk-directories (rootdir &rest args &key filef dirf hidden 
+					  (on-entry t) (ignore-dotfiles t)
 					  ignore-dirs)
+  (declare (ignore hidden))
   (when (probe-directory rootdir)
-    (when (and on-entry dirf) 
+    (when (and on-entry dirf)
       (funcall dirf rootdir))
     (mapc #'(lambda (path) 
-	      (let ((dirname (make-pathname :host (pathname-host path)
-					    :directory (append (pathname-directory path)
-							       (mklist (pathname-name path)))
-					    :device (pathname-device path)
-					    :version (pathname-version path))))
+	      (let ((dirname (make-pathname 
+			      :host (pathname-host path)
+			      :directory (append (pathname-directory path)
+						 (mklist (pathname-name path)))
+			      :device (pathname-device path)
+			      :version (pathname-version path))))
 		(if (and (not (and ignore-dotfiles
+				   (pathname-name path)
 				   (eq #\. (char (pathname-name path) 0))))
 			 (probe-directory dirname)
 			 (not (and ignore-dirs
-				   (member (pathname-name path) ignore-dirs :test #'equal))))
-		    (walk-directories dirname :filef filef :dirf dirf :hidden hidden :on-entry on-entry :ignore-dotfiles ignore-dotfiles :ignore-dirs ignore-dirs)
+				   (member (last1 (pathname-directory path) )
+					   ignore-dirs :test #'equal))))
+		    (apply 'walk-directories dirname args)
 		    (when filef (funcall filef path)))))
-	  (directory rootdir))
+	  (directory (merge-pathnames rootdir "*.*")))
     (when (and (not on-entry) dirf) (funcall dirf rootdir))))
 
 (defun-exported first-nonwhite-char (string)
@@ -155,31 +162,38 @@
     count))
 
 (defun-exported count-lisp-files (directory &key (extension "lisp") ignore-comments ignore-strings 
-					    print-files print-dirs (ignore-dirs '("_darcs" ".svn" ".cvs")))
+					    print-files print-dirs (ignore-dirs '("_darcs" ".svn" ".cvs" ".hg")))
   "Line count for all lisp files under provided directory"
   (let ((total 0)
+	(clean-total 0)
 	(files 0)
 	(dir-total 0))
     (mapc (lambda (dir)
 	    (walk-directories dir
-		      :filef #'(lambda (path) 
+		      :filef #'(lambda (path)
 				 (when (equal (pathname-type path) extension)
-				   (let ((file-count (count-lisp-lines path 
-								 :ignore-comments ignore-comments
-								 :ignore-strings ignore-strings)))
+				   (let ((file-count (count-lisp-lines 
+						      path 
+						      :ignore-comments ignore-comments
+						      :ignore-strings ignore-strings)))
 				     (incf files)
 				     (incf dir-total file-count)
-				     (when print-files (format t "~A: ~A~%" (namestring path) file-count)))))
-		      :dirf #'(lambda (path)
-				(incf total dir-total)
-				(when print-dirs
-				  (format t "Directory: ~A~%Total: ~A~%~%" (namestring path) dir-total))
-				(setf dir-total 0))
+				     (incf clean-total file-count)
+				     (when print-files (format t "~A: ~A~%" 
+							       (namestring path) 
+							       file-count)))))
+;; 		      :dirf #'(lambda (path)
+;; 				(incf total dir-total)
+;; 				(when print-dirs
+;; 				  (format t "Directory: ~A~%Total: ~A~%" 
+;; 					  (namestring path) dir-total))
+;; 				(setf dir-total 0))
 		      :on-entry nil
-		      :ignore-dirs ignore-dirs))
+		      :ignore-dirs ignore-dirs
+		      :ignore-dotfiles t))
 	  (mklist directory))
     (format t "Total lines: ~A~%" total)
-    (values total files)))
+    (values clean-total total files)))
 							
 (defun-exported directory-pathname (file)
   "Return the path of the directory of the file."

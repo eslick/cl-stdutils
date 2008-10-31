@@ -17,7 +17,7 @@
 
 (defmacro-exported abbrev (short long)
   "Create an abbreviation for an existing function or macro via macro instantiation"
-  `(defmacro ,short (&rest args)
+  `(defmacro ,short (&body args)
      `(,',long ,@args)))
 
 (defmacro-exported abbrevs (&body names)
