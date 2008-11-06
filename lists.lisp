@@ -63,7 +63,11 @@
       (nreverse (rec nil 0)))))
 
 (defmacro-exported pushlast (value place)
-  `(setf (cdr (last ,place)) (cons ,value nil)))
+  `(if (consp ,place)
+       (setf (cdr (last ,place)) 
+	     (cons ,value nil))
+       (setf ,place (cons ,value nil))))
+       
 
 (defmacro-exported poplast (place)
   "Remove the last element from the list and return it"
