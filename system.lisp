@@ -184,14 +184,14 @@
 		 names)
 	   ,@body))))))
 
-(defun use-package-noshadow-exported (src-package &optional (target-package *package*))
+(defun-exported use-package-noshadow-exported (src-package &optional (target-package *package*))
   (let ((src (if (packagep src-package) src-package (find-package src-package)))
 	(dst (if (packagep target-package) target-package (find-package target-package))))
     (do-external-symbols (sym src)
 			 (if (not (find-symbol (symbol-name sym) dst))
-			     (progn 
-			       (import sym)
-			       (export sym))))))
+			     (progn
+			       (import sym target-package)
+			       (export sym target-package))))))
 
 ;;
 ;; Help with macro construction (before we load macros.lisp)

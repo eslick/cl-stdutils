@@ -13,7 +13,7 @@
 
 (defun-exported fast-array-copy (a1 a2 start count)
   "Unsafe array copy"
-  (declare #-(or mcl sbcl) (type (simple-vector fixnum) a1 a2)
+  (declare #-(or mcl sbcl) (type (vector fixnum) a1 a2)
 	   #-(or mcl sbcl) (type fixnum start count)
 	   (optimize speed (safety 0)))
   (loop for pos fixnum from start to (- count 1) do

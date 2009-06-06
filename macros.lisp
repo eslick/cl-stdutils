@@ -18,6 +18,12 @@
      (when ,var
        ,@body)))
 
+(defmacro-exported dis1 (args &body body)
+  `(disassemble
+    (compile nil
+      (lambda ,args
+	,@body))))
+
 (defmacro-exported when-bind* (binds &body body)
   (if (null binds)
       `(progn ,@body)

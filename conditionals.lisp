@@ -13,14 +13,17 @@
 ;; ------------------------------
 ;; Boolean conditionals utilities
 
-(defmacro-exported neq (a b)
-  `(not (eq ,a ,b)))
+(defun-exported neq (a b)
+  (not (eq a b)))
 
-(defmacro-exported neql (a b)
-  `(not (eql ,a ,b)))
+(defun-exported neql (a b)
+  (not (eql a b)))
 
-(defmacro-exported nequal (a b)
-  `(not (equal ,a ,b)))
+(defun-exported nequal (a b)
+  (not (equal a b)))
+
+(defun-exported nequalp (a b)
+  (not (equal a b)))
 
 (defmacro-exported error-on-null (exp &rest error-args)
   (with-gensyms (value)
@@ -161,6 +164,10 @@
 	       ,@(cdr cl1))
 	   (acond2-mv ,@(cdr clauses)))))))
 
+(defmacro-exported alambda (args &body body)
+  "Allow recursive calls using captured variable 'self'"
+  `(labels ((self ,args ,@body))
+     #'self))
 
 ;;
 ;; Other Paul Graham utilities

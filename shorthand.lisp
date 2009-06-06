@@ -29,9 +29,14 @@
 
 ;; Standard abbreviations we use often
 
-(abbrevs dbind destructuring-bind
-         mvbind multiple-value-bind
-	 mvsetq multiple-value-setq)
+(abbrevs mvsetq multiple-value-setq)
+
+;; Do these manually for cool slime indenting
+(defmacro mvbind (binds call &body body)
+  `(multiple-value-bind ,binds ,call ,@body))
+
+(defmacro dbind (binds call &body body)
+  `(destructuring-bind ,binds ,call ,@body))
 
 (eval-when (eval compile load)
   (export 'dbind)
