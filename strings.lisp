@@ -72,6 +72,10 @@
       (when (neq (char string1 i) (char string2 (+ i start)))
 	(return nil)))))
 
+(defun-exported strcat (&rest strings)
+  (declare (type list strings))
+  (apply #'concatenate 'string strings))
+
 ;;
 ;; Misc odd functions
 ;;
