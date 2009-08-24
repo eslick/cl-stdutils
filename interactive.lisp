@@ -12,14 +12,7 @@
 ;; Interactive utilities:
 ;; ====================================
 
-(defpackage #:think.build
-  (:export 
-   *think-base-packages*))
-(in-package think.build)
-(defparameter *think-base-packages* nil)
-
-
-(in-package :think.utils)
+(in-package :stdutils)
 
 ;; -------------------------------
 ;; asdf command line utils

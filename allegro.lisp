@@ -9,7 +9,7 @@
 ;;;; Date Started:  November 2004
 ;;;;
 
-(in-package :utils)
+(in-package :stdutils)
 
 
 (defmacro-exported with-static-memory-allocation-old ((&key (free-bytes-new-pages 2000000) (free-bytes-new-other 1000000) 

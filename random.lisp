@@ -68,10 +68,13 @@
                      `(,(incf key) ,expr))
                  exprs))))
 
-(defun-exported random-subset (list percent)
-  "Extract a random subset of list and return two values,
-   the subset and the remainder set - order is not maintained"
-  (let ((offset (ceiling (* percent (length list))))
+(defun-exported random-subset (list size)
+  "Extract a random subset by percent (size < 1)
+   and return two values, the subset and the remainder 
+   set - order is not maintained"
+  (let ((offset (ceiling (if (> size 1)
+			     size
+			     (* size (length list)))))
 	(rlist (random-order list)))
     (values (subseq rlist 0 offset)
 	    (subseq rlist offset))))

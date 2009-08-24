@@ -45,11 +45,11 @@
       (port:giveup-lock put-lock)
       value)))
 
-(defmethod-exported mp-empty-p ((mb mp-mailbox))
-  "The mailbox is empty when you a get would block.
-   Return t when get would block and the mailbox is empty."
-  (with-slots (get-lock) mb
-    (when (port:locked-p get-lock))))
+;;(defmethod-exported mp-empty-p ((mb mp-mailbox))
+;;  "The mailbox is empty when you a get would block.
+;;   Return t when get would block and the mailbox is empty."
+;;  (with-slots (get-lock) mb
+;;    (when (:locked-p get-lock))))
 
 ;; (let ((writebox (make-instance 'mp-mailbox))
 ;;       (readbox (make-instance 'mp-mailbox)))

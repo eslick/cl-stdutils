@@ -33,7 +33,9 @@
 
 ;; Do these manually for cool slime indenting
 (defmacro mvbind (binds call &body body)
-  `(multiple-value-bind ,binds ,call ,@body))
+  `(multiple-value-bind ,binds ,call 
+     (declare (ignorable ,@binds))
+     ,@body))
 
 (defmacro dbind (binds call &body body)
   `(destructuring-bind ,binds ,call ,@body))
