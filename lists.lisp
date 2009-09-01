@@ -265,6 +265,10 @@
 ;;				  (merge-elts 
 			       
 
+(defun-exported safe-subseq (sequence start &optional end)
+  (let ((len (length sequence)))
+    (subseq sequence start (when end (min len end)))))
+
 ;;
 ;; Finding
 ;; 
