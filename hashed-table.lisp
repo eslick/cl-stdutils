@@ -45,6 +45,7 @@
 		 :type type))
 
 (defmethod-exported initialize-instance :after ((table hashed-table-iterator) &rest initargs &key &allow-other-keys)
+  (declare (ignore initargs))
   (reset table))
 
 (defmethod-exported next-p ((iter hashed-table-iterator))

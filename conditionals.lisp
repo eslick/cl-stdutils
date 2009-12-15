@@ -68,6 +68,11 @@
 (defmacro-exported ifret (test-form &rest else-form)
   `(aif-ret ,test-form ,@else-form))
 
+(defmacro-exported retset (variable form)
+  `(aif-ret ,variable
+     (setf ,variable
+	   ,form)))
+
 (defmacro-exported awhen (test-form &body body) 
   `(aif ,test-form
 	(progn ,@body)))
@@ -88,6 +93,11 @@
      (if (= it 0)
 	 ,when-zero-form
        it)))
+
+(defmacro-exported aprog1 (result-form &body body)
+  `(let ((it ,result-form))
+     (prog1 it
+       ,@body)))
 
 (defmacro-exported awhile (expr &body body) 
   `(do ((it ,expr ,expr))

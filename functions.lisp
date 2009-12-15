@@ -22,6 +22,7 @@
        (funcall #',name ,@parms))))
 
 
+#+duplicates
 (defmacro-exported alambda (parms &body body)
   "Capture a variable self in the body of
    program that allows the program to recurse

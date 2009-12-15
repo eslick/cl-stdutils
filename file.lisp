@@ -164,6 +164,7 @@
 (defun-exported count-lisp-files (directory &key (extension "lisp") ignore-comments ignore-strings 
 					    print-files print-dirs (ignore-dirs '("_darcs" ".svn" ".cvs" ".hg")))
   "Line count for all lisp files under provided directory"
+  (declare (ignore print-dirs))
   (let ((total 0)
 	(clean-total 0)
 	(files 0)
@@ -199,6 +200,6 @@
   "Return the path of the directory of the file."
   ;; This function has only been tested in alegro and mcl
   #+allegro (excl:path-pathname file)
-  #+mcl (pathname-directory file)
-  #-(or mcl allegro) nil)
+  #+(or mcl ccl) (pathname-directory file)
+  #-(or mcl ccl allegro) nil)
 ;;  #-(or mcl allegro) (excl:path-pathname file) ;; Should fail, but is easy to extend :)

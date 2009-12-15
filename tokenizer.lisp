@@ -1,4 +1,3 @@
-
 (in-package :stdutils)
 
 ;; -----------------------------------
@@ -28,7 +27,6 @@
 ;; Custom detokenizer to extract words by
 ;; whitespace separation.
 (defun-exported extract-words (str &optional (start 0))
-  (declare (inline constituent extract-tokens))
   (extract-tokens str #'constituent start))
 
 ;; Special detokenizer, splits sentences like
@@ -39,7 +37,7 @@
 
 (defun-exported extract-tagged-words (tagspec sentence)
   (let (a b)
-    (mapc #'(lambda (tok) 
+    (mapc #'(lambda (tok)
 	      (let ((res (extract-tokens 
 			  tok
 			  #'(lambda (x) (not (find x tagspec))))))
