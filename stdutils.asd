@@ -12,7 +12,9 @@
     :author "Ian Eslick <eslick@media.mit.edu>"
 
     :licence "BSD"
-    :components ((:file "package")
+    :components ((:module "src"
+		 :components 
+		((:file "package")
 		 (:file "system" :depends-on ("package"))         ;; global system macros
 		 (:file "lists" :depends-on ("system"))           ;; list related utilities, tree walking, searching, etc
 		 (:file "macros" :depends-on ("system"))          ;; Useful macros, such as aif, awhen, etc.
@@ -62,7 +64,7 @@
 		 (:file "vector-keyed-table" :depends-on ("hashed-table"))
 ;;		 (:file "vechash"  :depends-on ("shorthand"))    ;; a fast hash table for vector keys
 ;;		 (:file "sbtree" :depends-on ("shorthand"))      
-		 )
+		 )))
     :serial t
     :in-order-to ((load-op (compile-op :stdutils)))
     :depends-on (:cl-ppcre))
