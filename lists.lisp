@@ -195,7 +195,26 @@
 	  ((>= 1 (length lists))
 	   (mapcar #'mklist (car lists)))
 	  (t (expand-combos (car lists) (apply #'combinations (cdr lists)))))))
-		      
+
+(defun-exported distinct (list &key (test #'eql) (key #'identity))
+  "Create a reduced list which groups all equal terms in the original into sublists
+   (1 2 2 3 3 3 4) => ((1) (2 2) (3 3 3) (4))"
+  (ndistinct (copy-list list) :test test :key key))
+
+(defun-exported ndistinct (list &key (test #'eql) (key #'identity))
+  "Like distinct, but performs a destructive sort on the original list"
+  (labels ((rec (current accum rest)
+	     (cond ((null rest)
+		    (cons current accum))
+		   ((funcall test 
+			     (funcall key (first current))
+			     (funcall key (first rest)))
+		    (rec (cons (first rest) current) accum (rest rest)))
+		   (t (rec (list (first rest)) (cons current accum) (rest rest))))))
+    (when (> (length list) 0)
+      (let ((sorted (sort list #'< :key key)))
+	(rec (list (first sorted)) nil (rest sorted))))))
+
 ;;
 ;; Filtering
 ;;
@@ -266,8 +285,9 @@
 			       
 
 (defun-exported safe-subseq (sequence start &optional end)
-  (let ((len (length sequence)))
-    (subseq sequence start (when end (min len end)))))
+  (let ((len (length sequence))
+	(st (if (< start 0) 0 start)))
+    (subseq sequence st (when end (min len end)))))
 
 ;;
 ;; Finding
@@ -281,6 +301,15 @@
       (or (rfind-if fn (car tree))
           (if (cdr tree) (rfind-if fn (cdr tree))))))
 
+(defun-exported rfind-node-if (fn tree)
+  "Recurse cons-based tree structure until a matching subtree is found"
+  (cond ((null tree) nil)
+	((funcall fn tree) tree)
+	((atom tree) nil)
+	((consp tree)
+	 (or (rfind-node-if fn (car tree))
+	     (rfind-node-if fn (cdr tree))))
+	(t nil)))
 
 (defun-exported longer (x y)
   "Is x longer than y?"
@@ -472,10 +501,10 @@
 
 (defsetf assoc-get assoc-put)
 
-(defmacro-exported assoc-setf (place key value)
+(defmacro-exported assoc-setf (place key value &optional (test #'eq))
   (with-gensyms (list it)
     `(let* ((,list ,place)
-	    (,it (assoc ,key ,list)))
+	    (,it (assoc ,key ,list :test ,test)))
        (if ,it
 	   (setf (cdr ,it) ,value)
 	   (setf ,place (acons ,key ,value ,list))))))
@@ -633,6 +662,7 @@
 (defun-exported localize-expression (exp &key (package *package*) exceptions)
   (on-trees (cons left right) (localize-symbol it :package package :exceptions exceptions) exp))
 
+
 ;; 
 ;; Really odd functions
 ;; 
@@ -720,8 +750,9 @@ Keylist accepts :key, :test, and :test-not"
     (push elt list))
   (nreverse list))
 
-(defun-exported list->array (list &key (adjustable nil))
-  (make-array (length list) :initial-contents list :adjustable adjustable))
+(defun-exported list->array (list &key (adjustable nil) (type t))
+  (make-array (length list) :initial-contents list :adjustable adjustable
+	      :element-type type))
 
 ;; -------------------------------
 ;; Funky sorting

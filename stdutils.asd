@@ -10,7 +10,8 @@
     :description "Standard Utilities"
     :version "1.0"
     :author "Ian Eslick <eslick@media.mit.edu>"
-    :licence "MIT License"
+
+    :licence "BSD"
     :components ((:file "package")
 		 (:file "system" :depends-on ("package"))         ;; global system macros
 		 (:file "lists" :depends-on ("system"))           ;; list related utilities, tree walking, searching, etc

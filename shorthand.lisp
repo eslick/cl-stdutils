@@ -96,7 +96,7 @@
   "Bind names to associated values in assoc-list or nil"
   `(let (,@(mapcar #'(lambda (x) 
 		       (list x `(aif (or (assoc ',x ,alist)
-					 (assoc (intern ',x (find-package :keyword)) ,alist))
+					 (assoc (intern (symbol-name ',x) (find-package :keyword)) ,alist))
 				     (cdr it)
 				     nil)))
 		   names))

@@ -625,12 +625,13 @@ for characters in a string"
 
 (defun-exported string-right-trim-one-char (char str)
   (declare (simple-string str))
-  (let* ((len (length str))
-	 (last (1- len)))
-    (declare (fixnum len last))
-    (if (char= char (schar str last))
-	(subseq str 0 last)
-      str)))
+  (let ((len (length str)))
+    (when (> len 0)
+      (let ((last (1- len)))
+	(declare (fixnum len last))
+	(if (char= char (schar str last))
+	    (subseq str 0 last)
+	    str)))))
 
 
 (defun-exported string-strip-ending (str endings)

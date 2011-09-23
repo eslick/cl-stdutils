@@ -35,6 +35,17 @@
 		  (format out1 "~A~%" line))))))))))
 
 ;;
+;; Slurp
+;;
+
+(defun-exported slurp-file (filename)
+  "Read a file's contents to a string"
+  (with-open-file (stream filename :direction :input)
+    (let ((seq (make-string (file-length stream))))
+      (read-sequence seq stream)
+      seq)))
+
+;;
 ;; With and do macros on files as streams
 ;; 
 

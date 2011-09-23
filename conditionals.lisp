@@ -174,10 +174,13 @@
 	       ,@(cdr cl1))
 	   (acond2-mv ,@(cdr clauses)))))))
 
+(defvar-exported self nil)
+
 (defmacro-exported alambda (args &body body)
   "Allow recursive calls using captured variable 'self'"
   `(labels ((self ,args ,@body))
      #'self))
+
 
 ;;
 ;; Other Paul Graham utilities
