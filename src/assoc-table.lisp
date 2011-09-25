@@ -21,7 +21,7 @@
   (assoc-get (alist table) key))
 
 (defmethod-exported (setf get-value) (value (table assoc-table) key)
-  (assoc-setf (alist table) key value)
+  (assoc-setf (alist table) key value 'eq)
   value)
 
 (defmethod-exported find-value ((table assoc-table) value &key all (key #'identity) (test #'eq))

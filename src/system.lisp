@@ -49,11 +49,9 @@
   "Exports the class name and all defined accessors using reflection"
   (let ((class (gensym)))  
     `(progn
+       (defclass ,classname ,superclasses ,slots ,@options)
        (eval-when (:compile-toplevel :load-toplevel :execute)
-	 (export ',classname))
-       (let ((,class (defclass ,classname ,superclasses ,slots ,@options)))
-	 ;; export slot defs here
-	 ,class))))
+	 (export ',classname)))))
 
 ;; A structure generation and exporting facility
 (defmacro-exported defstruct-exported (structname superclasses slots &rest options)
@@ -75,9 +73,9 @@
 ;; A generic function that exports its name
 (defmacro-exported defmethod-exported (method-spec lambda-list &body body)
   `(progn
+     (defmethod ,method-spec ,lambda-list ,@body)
      (eval-when (:compile-toplevel :load-toplevel :execute)
-       (export ',method-spec))
-     (defmethod ,method-spec ,lambda-list ,@body)))
+       (export ',method-spec))))
 
 ;; A defvar that exports it's name
 (defmacro-exported defvar-exported (name &rest args)

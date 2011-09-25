@@ -11,41 +11,6 @@
 (in-package :stdutils)
 
 ;;
-;; Operations over files
-;;
-
-(defun split-file (infile outfile1 outfile2 &key (type :half))
-  "Allows you to split a file by :alternate lines or to split
-   it in half by length"
-  (with-open-file (in infile :direction :input)
-    (with-open-file (out1 outfile1 :direction :output :if-exists :supersede)
-      (with-open-file (out2 outfile2 :direction :output :if-exists :supersede)
-	(let ((split-size (/ (file-length in) 2))
-	      (sofar 0))
-	  (do-count-contentful-lines (line count in)
-	     (case type
-	       (:half 
-		(incf sofar (length line))
-		(if (> sofar split-size)
-		    (format out2 "~A~%" line)
-		  (format out1 "~A~%" line)))
-	       (:alternate
-		(if (= 0 (mod count 2))
-		    (format out2 "~A~%" line)
-		  (format out1 "~A~%" line))))))))))
-
-;;
-;; Slurp
-;;
-
-(defun-exported slurp-file (filename)
-  "Read a file's contents to a string"
-  (with-open-file (stream filename :direction :input)
-    (let ((seq (make-string (file-length stream))))
-      (read-sequence seq stream)
-      seq)))
-
-;;
 ;; With and do macros on files as streams
 ;; 
 
@@ -99,43 +64,11 @@
 ;; File system heirarchy operations
 ;;
 
-(defun probe-directory (filename)
-  "Check whether the file name names an existing directory."
-  ;; based on
-  ;; From: Bill Schelter <wfs@fireant.ma.utexas.edu>
-  ;; Date: Wed, 5 May 1999 11:51:19 -0500
-  ;; fold the name.type into directory
-  (flet ((un-unspecific (value)
-           (if (eq value :unspecific) nil value)))
-    (let* ((path (pathname filename))
-	   (name (un-unspecific (pathname-name path)))
-	   (type (un-unspecific (pathname-type path)))
-	   (new-dir
-	    (cond ((and name type) (list (concatenate 'string name "." type)))
-		  (name (list name))
-		  (type (list type))
-		  (t nil))))
-      (when new-dir
-	(setq path (make-pathname
-		    :directory (append (un-unspecific (pathname-directory path))
-				       new-dir)
-		    :name nil :type nil :version nil :defaults path)))
-      #+allegro (excl::probe-directory path)
-      #+clisp (values
-	       (ignore-errors
-		 (#+lisp=cl ext:probe-directory #-lisp=cl lisp:probe-directory
-			    path)))
-      #+cmu (eq :directory (unix:unix-file-kind (namestring path)))
-      #+lispworks (lw:file-directory-p path)
-      #+sbcl (eq :directory (sb-unix:unix-file-kind (namestring path)))
-      #-(or allegro clisp cmu lispworks sbcl)
-      (probe-file path))))
-
 (defun-exported walk-directories (rootdir &rest args &key filef dirf hidden 
 					  (on-entry t) (ignore-dotfiles t)
 					  ignore-dirs)
   (declare (ignore hidden))
-  (when (probe-directory rootdir)
+  (when (fad:directory-exists-p rootdir)
     (when (and on-entry dirf)
       (funcall dirf rootdir))
     (mapc #'(lambda (path) 
@@ -148,7 +81,7 @@
 		(if (and (not (and ignore-dotfiles
 				   (pathname-name path)
 				   (eq #\. (char (pathname-name path) 0))))
-			 (probe-directory dirname)
+			 (fad:directory-exists-p dirname)
 			 (not (and ignore-dirs
 				   (member (last1 (pathname-directory path) )
 					   ignore-dirs :test #'equal))))
@@ -214,3 +147,39 @@
   #+(or mcl ccl) (pathname-directory file)
   #-(or mcl ccl allegro) nil)
 ;;  #-(or mcl allegro) (excl:path-pathname file) ;; Should fail, but is easy to extend :)
+
+;;
+;; Operations over files
+;;
+
+(defun split-file (infile outfile1 outfile2 &key (type :half))
+  "Allows you to split a file by :alternate lines or to split
+   it in half by length"
+  (with-open-file (in infile :direction :input)
+    (with-open-file (out1 outfile1 :direction :output :if-exists :supersede)
+      (with-open-file (out2 outfile2 :direction :output :if-exists :supersede)
+	(let ((split-size (/ (file-length in) 2))
+	      (sofar 0))
+	  (do-count-contentful-lines (line count in)
+	     (case type
+	       (:half 
+		(incf sofar (length line))
+		(if (> sofar split-size)
+		    (format out2 "~A~%" line)
+		  (format out1 "~A~%" line)))
+	       (:alternate
+		(if (= 0 (mod count 2))
+		    (format out2 "~A~%" line)
+		  (format out1 "~A~%" line))))))))))
+
+;;
+;; Slurp
+;;
+
+(defun-exported slurp-file (filename)
+  "Read a file's contents to a string"
+  (with-open-file (stream filename :direction :input)
+    (let ((seq (make-string (file-length stream))))
+      (read-sequence seq stream)
+      seq)))
+

@@ -67,4 +67,4 @@
 		 )))
     :serial t
     :in-order-to ((load-op (compile-op :stdutils)))
-    :depends-on (:cl-ppcre))
+    :depends-on (:cl-ppcre :cl-fad))
